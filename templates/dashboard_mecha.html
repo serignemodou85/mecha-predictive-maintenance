@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MECHA — Dashboard Maintenance Prédictive</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-brand">
+    <div class="header-icon">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.92c.04-.34.07-.69.07-1.08s-.03-.73-.07-1.08l2.32-1.8c.21-.16.27-.46.13-.7l-2.2-3.8c-.13-.25-.42-.33-.67-.25l-2.74 1.1c-.57-.44-1.18-.8-1.86-1.08l-.41-2.9c-.05-.26-.28-.46-.56-.46h-4.4c-.28 0-.5.2-.56.46l-.41 2.9c-.68.28-1.3.64-1.86 1.08L4.63 5.45c-.25-.08-.54 0-.67.25l-2.2 3.8c-.14.24-.08.54.13.7l2.32 1.8c-.04.35-.07.7-.07 1.08s.03.73.07 1.08l-2.32 1.8c-.21.16-.27.46-.13.7l2.2 3.8c.13.25.42.33.67.25l2.74-1.1c.56.44 1.18.8 1.86 1.08l.41 2.9c.06.26.28.46.56.46h4.4c.28 0 .5-.2.56-.46l.41-2.9c.68-.28 1.3-.64 1.86-1.08l2.74 1.1c.25.08.54 0 .67-.25l2.2-3.8c.14-.24.08-.54-.13-.7l-2.32-1.8z"/>
+      </svg>
+    </div>
+    <div>
+      <div class="header-logo">MECHA</div>
+      <div class="header-sub">Maintenance Prédictive — Tableau de bord</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="sim-btn" id="sim-btn" onclick="toggleSim()">▶ Simuler dégradation</button>
+    <div class="api-status">
+      <div class="api-dot" id="api-dot"></div>
+      <span id="api-status-text">Connexion...</span>
+    </div>
+    <div class="refresh-bar">
+      <button class="auto-toggle on" id="auto-btn" onclick="toggleAuto()">⏱ Auto ON</button>
+      <div class="countdown-ring" id="ring-wrap">
+        <svg viewBox="0 0 22 22" width="24" height="24">
+          <circle class="ring-bg" cx="11" cy="11" r="9"/>
+          <circle class="ring-fg" id="ring-fg" cx="11" cy="11" r="9" style="stroke-dashoffset:0"/>
+        </svg>
+        <span class="countdown-num" id="cnum">30</span>
+      </div>
+      <button class="refresh-btn" onclick="refreshAll()">Actualiser</button>
+    </div>
+  </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <div class="filter-section">
+    <span class="filter-label">Pays</span>
+    <button class="filter-btn active" id="f-all" onclick="setCountry('all')">🌍 Tous</button>
+    <button class="filter-btn" id="f-fr"  onclick="setCountry('FR')"><span class="flag">🇫🇷</span> France</button>
+    <button class="filter-btn" id="f-es"  onclick="setCountry('ES')"><span class="flag">🇪🇸</span> Espagne</button>
+  </div>
+  <div class="filter-sep"></div>
+  <div class="filter-section">
+    <span class="filter-label">Ville</span>
+    <button class="city-btn" id="c-Lyon"      onclick="setCity('Lyon')">Lyon</button>
+    <button class="city-btn" id="c-Toulouse"  onclick="setCity('Toulouse')">Toulouse</button>
+    <button class="city-btn" id="c-Nantes"    onclick="setCity('Nantes')">Nantes</button>
+    <button class="city-btn" id="c-Madrid"    onclick="setCity('Madrid')">Madrid</button>
+    <button class="city-btn" id="c-Barcelone" onclick="setCity('Barcelone')">Barcelone</button>
+  </div>
+  <span class="filter-count" id="filter-count"></span>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="last-update" id="last-update">Dernière mise à jour : —</div>
+
+  <!-- KPI ROW 1 : Vue globale -->
+  <div class="kpi-section-label">Vue globale</div>
+  <div class="kpi-grid">
+    <div class="kpi-card accent-blue">
+      <div class="kpi-top">
+        <div><div class="kpi-label">Machines surveillées</div><div class="kpi-value blue" id="kpi-total">—</div></div>
+        <div class="kpi-icon blue">🏭</div>
+      </div>
+      <div class="kpi-sub" id="kpi-total-sub">5 usines MECHA</div>
+    </div>
+    <div class="kpi-card accent-green">
+      <div class="kpi-top">
+        <div><div class="kpi-label">État normal</div><div class="kpi-value green" id="kpi-normal">—</div></div>
+        <div class="kpi-icon green">✅</div>
+      </div>
+      <div class="kpi-sub">Fonctionnement nominal</div>
+    </div>
+    <div class="kpi-card accent-orange">
+      <div class="kpi-top">
+        <div><div class="kpi-label">En attention</div><div class="kpi-value orange" id="kpi-attention">—</div></div>
+        <div class="kpi-icon orange">⚠️</div>
+      </div>
+      <div class="kpi-sub">Surveillance renforcée</div>
+    </div>
+    <div class="kpi-card accent-red">
+      <div class="kpi-top">
+        <div><div class="kpi-label">Critiques</div><div class="kpi-value red" id="kpi-critique">—</div></div>
+        <div class="kpi-icon red">🔴</div>
+      </div>
+      <div class="kpi-sub">Intervention requise</div>
+    </div>
+  </div>
+
+  <!-- KPI ROW 2 : Maintenance préventive -->
+  <div class="kpi-section-label" style="margin-top:4px">Maintenance préventive</div>
+  <div class="kpi-grid">
+    <div class="kpi-card accent-red">
+      <div class="kpi-top">
+        <div><div class="kpi-label">Interventions &lt; 24h</div><div class="kpi-value red" id="kpi-urgentes">—</div></div>
+        <div class="kpi-icon red">🚨</div>
+      </div>
+      <div class="kpi-sub">RUL &lt; 1 440 min</div>
+    </div>
+    <div class="kpi-card accent-orange">
+      <div class="kpi-top">
+        <div><div class="kpi-label">Maintenance planifiable</div><div class="kpi-value orange" id="kpi-planif">—</div></div>
+        <div class="kpi-icon orange">🔧</div>
+      </div>
+      <div class="kpi-sub">Machines en ATTENTION</div>
+    </div>
+    <div class="kpi-card accent-green">
+      <div class="kpi-top">
+        <div><div class="kpi-label">Taux de disponibilité</div><div class="kpi-value green" id="kpi-dispo">—</div></div>
+        <div class="kpi-icon green">📈</div>
+      </div>
+      <div class="kpi-sub">% machines nominales</div>
+    </div>
+    <div class="kpi-card accent-teal">
+      <div class="kpi-top">
+        <div><div class="kpi-label">RUL moyen du parc</div><div class="kpi-value teal" id="kpi-rul-moyen">—</div></div>
+        <div class="kpi-icon teal">⏱️</div>
+      </div>
+      <div class="kpi-sub">Durée de vie restante moy.</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="machines-panel">
+      <div class="section-title">Parc machines <span id="machines-subtitle">cliquer sur une machine pour les détails</span></div>
+      <div id="machines-container"><div style="text-align:center;padding:2rem;color:#888780;"><span class="spinner"></span> Chargement...</div></div>
+    </div>
+    <div class="alerts-panel">
+      <div class="alerts-head">
+        <div class="section-title" style="margin-bottom:0">Alertes actives <span id="alert-scope"></span></div>
+        <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+      </div>
+      <div id="alerts-container"><div style="text-align:center;padding:2rem;color:#888780;"><span class="spinner"></span></div></div>
+    </div>
+  </div>
+
+  <!-- PREDICTION MANUELLE -->
+  <div class="predict-panel">
+    <div class="section-title">Simuler une prédiction <span>entrez les paramètres d'une machine</span></div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Machine ID</label><input class="form-input" id="f-machine" value="M001"></div>
+      <div class="form-group"><label class="form-label">Usine</label>
+        <select class="form-input" id="f-usine">
+          <option>FR-Lyon</option><option>FR-Toulouse</option><option>FR-Nantes</option>
+          <option>ES-Madrid</option><option>ES-Barcelone</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Type de pièce</label>
+        <select class="form-input" id="f-type">
+          <option value="L">L — Low quality</option>
+          <option value="M" selected>M — Medium quality</option>
+          <option value="H">H — High quality</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Temp. air (°C)</label><input class="form-input" id="f-tair" type="number" value="25" step="0.1"></div>
+      <div class="form-group"><label class="form-label">Temp. process (°C)</label><input class="form-input" id="f-tproc" type="number" value="35" step="0.1"></div>
+      <div class="form-group"><label class="form-label">Vitesse (tr/min)</label><input class="form-input" id="f-vit" type="number" value="1500"></div>
+      <div class="form-group"><label class="form-label">Couple (N.m)</label><input class="form-input" id="f-couple" type="number" value="42" step="0.1"></div>
+      <div class="form-group"><label class="form-label">Usure outil (min)</label><input class="form-input" id="f-usure" type="number" value="80"></div>
+      <div class="form-group"><label class="form-label">Modèle IA</label>
+        <select class="form-input" id="f-model">
+          <option value="rf">Random Forest</option>
+          <option value="xgb">XGBoost</option>
+          <option value="lstm">LSTM (RUL seul)</option>
+        </select>
+      </div>
+    </div>
+    <button class="predict-btn" id="predict-btn" onclick="predict()">Lancer la prédiction</button>
+    <div class="result-box" id="result-box">
+      <div class="result-header" id="result-header"></div>
+      <div class="result-date" id="res-date"></div>
+      <div class="result-model" id="res-model"></div>
+      <div class="result-grid">
+        <div class="result-metric"><div class="result-metric-val" id="res-prob">—</div><div class="result-metric-lbl">Probabilité panne</div></div>
+        <div class="result-metric"><div class="result-metric-val" id="res-rul">—</div><div class="result-metric-lbl">RUL (min restants)</div></div>
+        <div class="result-metric"><div class="result-metric-val" id="res-alerte">—</div><div class="result-metric-lbl">Niveau d'alerte</div></div>
+      </div>
+      <div class="result-reco" id="res-reco"></div>
+    </div>
+  </div>
+
+  <!-- RAPPORT DE MAINTENANCE -->
+  <div class="rapport-panel">
+    <div class="rapport-head">
+      <div class="section-title" style="margin-bottom:0">Rapport de maintenance <span id="rapport-date">en attente des données...</span></div>
+      <div class="rapport-actions">
+        <button class="export-btn" onclick="exportRapportCSV()">⬇ CSV</button>
+        <button class="export-btn" onclick="exportRapportJSON()">⬇ JSON</button>
+      </div>
+    </div>
+    <div id="rapport-container"><div style="text-align:center;padding:1.5rem;color:#888780;font-size:13px;"><span class="spinner"></span> En attente...</div></div>
+  </div>
+</div>
+
+<!-- GRAPHIQUES ML -->
+<div class="graphs-panel">
+  <div class="section-title">Analyses ML — Visualisations <span>résultats d'entraînement des modèles</span></div>
+  <div class="graph-tabs">
+    <button class="graph-tab active" id="gtab-classif"  onclick="switchGraphTab('classif')">Classification</button>
+    <button class="graph-tab"        id="gtab-rul"      onclick="switchGraphTab('rul')">Régression RUL</button>
+  </div>
+
+  <div class="graph-grid" id="gpanel-classif">
+    <div class="graph-card">
+      <div class="graph-card-title">ROC — Comparaison 4 modèles</div>
+      <img src="/plot/roc_curve_4models.png" alt="ROC 4 modèles" class="graph-img">
+    </div>
+    <div class="graph-card">
+      <div class="graph-card-title">ROC — RF vs XGBoost (détail)</div>
+      <img src="/plot/roc_curve.png" alt="ROC RF vs XGB" class="graph-img">
+    </div>
+    <div class="graph-card">
+      <div class="graph-card-title">Matrice de confusion — Random Forest</div>
+      <img src="/plot/confusion_matrix.png" alt="Matrice de confusion" class="graph-img">
+    </div>
+    <div class="graph-card">
+      <div class="graph-card-title">Importance des features</div>
+      <img src="/plot/feature_importance.png" alt="Feature importance" class="graph-img">
+    </div>
+    <div class="graph-card" style="grid-column: 1 / -1;">
+      <div class="graph-card-title">Courbes d'apprentissage — Random Forest</div>
+      <img src="/plot/learning_curve.png" alt="Learning curve" class="graph-img graph-img--wide">
+    </div>
+  </div>
+
+  <div class="graph-grid" id="gpanel-rul" style="display:none">
+    <div class="graph-card">
+      <div class="graph-card-title">Prédiction RUL — Random Forest Regressor</div>
+      <img src="/plot/rul_prediction.png" alt="RUL RF" class="graph-img">
+    </div>
+    <div class="graph-card">
+      <div class="graph-card-title">Prédiction RUL — LSTM</div>
+      <img src="/plot/lstm_rul_prediction.png" alt="RUL LSTM" class="graph-img">
+    </div>
+  </div>
+</div>
+
+<div class="footer">MECHA — Solution IA de Maintenance Prédictive — MSPR TPRE841 — EPSI 2025-2026</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Machine</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="chart-tabs">
+      <button class="chart-tab active" id="tab-rul"  onclick="switchTab('rul')">RUL (min restants)</button>
+      <button class="chart-tab"        id="tab-prob" onclick="switchTab('prob')">Probabilité de panne (%)</button>
+    </div>
+    <div class="chart-wrap"><canvas id="histChart"></canvas></div>
+    <div class="modal-stats">
+      <div class="mstat"><div class="mstat-val" id="m-rul">—</div><div class="mstat-lbl">RUL actuel (min)</div></div>
+      <div class="mstat"><div class="mstat-val" id="m-prob">—</div><div class="mstat-lbl">Prob. panne</div></div>
+      <div class="mstat"><div class="mstat-val" id="m-alerte">—</div><div class="mstat-lbl">Niveau alerte</div></div>
+    </div>
+  </div>
+</div>
+
+<script defer src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>

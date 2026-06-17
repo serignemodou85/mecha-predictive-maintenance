@@ -1,0 +1,27 @@
+{
+  "classification": {
+    "accuracy": 0.9845,
+    "f1_score": 0.777,
+    "auc_roc": 0.9718,
+    "cv_f1_mean": 0.7743,
+    "cv_f1_std": 0.0363
+  },
+  "xgb_classification": {
+    "accuracy": 0.9875,
+    "f1_score": 0.8148,
+    "auc_roc": 0.9729,
+    "cv_f1_mean": 0.8109,
+    "cv_f1_std": 0.0124
+  },
+  "regression": {
+    "mae": 4.19,
+    "rmse": 5.29,
+    "r2": 0.9935
+  },
+  "lstm_regression": {
+    "mae": 4.11,
+    "rmse": 5.15,
+    "r2": 0.9935,
+    "seq_len": 20
+  }
+}

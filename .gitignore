@@ -1,0 +1,41 @@
+# Environnements virtuels
+venv/
+venve/
+env/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Variables d'environnement
+.env
+.env.*
+
+# Scripts utilitaires temporaires (generes pendant le projet)
+docs/update_livrables.py
+docs/update_livrables2.py
+docs/add_models_rows.py
+docs/add_annexes.py
+docs/fix4.py
+docs/generate_doc.py
